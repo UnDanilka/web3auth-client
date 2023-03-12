@@ -16,26 +16,41 @@ function App() {
     }
   }
 
+  const createWallet = (mnemonic: string) => {
+    const walletMnemonic = ethers.Wallet.fromMnemonic(mnemonic)
+    const provider = new ethers.providers.JsonRpcProvider(
+      "https://rpc.chiadochain.net"
+    )
+    const connectedWallet = walletMnemonic.connect(provider)
+    return connectedWallet
+  }
+
   const handleAuth = () => {
     if (email) {
       fetch("http://localhost:4000/emails")
         .then((res) => res.json())
-        .then((emailsArray) => {
+        .then(async (emailsArray) => {
           const existingWallet = emailsArray.find(
             (emailObj: any) => emailObj[email]
           )
           if (existingWallet) {
             console.log("existingWallet", existingWallet)
-            setWallet(existingWallet[email])
+
+            const mnemonic = existingWallet[email].mnemonic
+            const createdWallet = createWallet(mnemonic)
+
+            setWallet(createdWallet)
           } else {
             const newWallet = ethers.Wallet.createRandom()
             console.log("newWallet", newWallet)
             const walletData = {
               address: newWallet.address,
-              mnemonic: newWallet?.mnemonic?.phrase,
+              mnemonic: newWallet?.mnemonic?.phrase || "",
             }
 
-            setWallet(walletData)
+            const createdWallet = createWallet(walletData.mnemonic)
+
+            setWallet(createdWallet)
 
             const params = {
               method: "POST",
@@ -51,6 +66,16 @@ function App() {
           setEmail("")
         })
     }
+  }
+
+  const sendETH = async () => {
+    const tx = {
+      to: "0x2129e7F5aF1328BaF1298b1EDe4Fe6Ad458782d4",
+      value: ethers.utils.parseEther("0.001"),
+    }
+
+    const hash = await wallet.sendTransaction(tx)
+    console.log("hash", hash)
   }
 
   useEffect(() => {
@@ -81,7 +106,9 @@ function App() {
       {wallet && (
         <>
           <div className="transaction">
-            <div className="transaction_btn">Send ETH</div>
+            <div className="transaction_btn" onClick={sendETH}>
+              Send ETH
+            </div>
           </div>
           <div className="address">{wallet.address}</div>
         </>
