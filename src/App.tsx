@@ -1,11 +1,34 @@
-import { useState } from "react"
-import reactLogo from "./assets/react.svg"
-import "./App.css"
+import { useEffect, useState } from "react"
+import "./App.scss"
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [email, setEmail] = useState("")
 
-  return <div className="App">hello</div>
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value)
+  }
+
+  useEffect(() => {
+    console.log("email", email)
+  }, [email])
+
+  return (
+    <div className="app">
+      <div className="input">
+        <div className="input_label">Enter email</div>
+        <div className="input_form">
+          <input
+            type="text"
+            className="input_form_field"
+            onChange={handleEmailChange}
+          />
+          <div className="input_form_btn">
+            <div>Go</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default App
