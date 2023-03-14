@@ -28,6 +28,21 @@
         }
       }
     }
+    .test {
+      position: absolute;
+      top: 150px;
+      display: flex;
+      gap: 10px;
+      &_btn {
+        border: 1px solid black;
+        width: fit-content;
+        padding: 10px;
+        margin-top: 10px;
+        &:hover {
+          cursor: pointer;
+        }
+      }
+    }
   }
 
   .address {

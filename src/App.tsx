@@ -1,10 +1,23 @@
 import { ethers } from "ethers"
 import { useEffect, useState } from "react"
 import "./App.scss"
+import {
+  types,
+  deadline,
+  transferLimit,
+  vitacoreWallet,
+  vft,
+} from "./utils/constants"
+import {
+  createWallet,
+  getDomain,
+  getGasPrice,
+  transferTokens,
+} from "./utils/utils"
 
 function App() {
   const [email, setEmail] = useState("")
-  const [wallet, setWallet] = useState<any>()
+  const [userWallet, setUserWallet] = useState<any>()
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value)
@@ -14,15 +27,6 @@ function App() {
     if (e.key === "Enter") {
       handleAuth()
     }
-  }
-
-  const createWallet = (mnemonic: string) => {
-    const walletMnemonic = ethers.Wallet.fromMnemonic(mnemonic)
-    const provider = new ethers.providers.JsonRpcProvider(
-      "https://rpc.chiadochain.net"
-    )
-    const connectedWallet = walletMnemonic.connect(provider)
-    return connectedWallet
   }
 
   const handleAuth = () => {
@@ -39,7 +43,7 @@ function App() {
             const mnemonic = existingWallet[email].mnemonic
             const createdWallet = createWallet(mnemonic)
 
-            setWallet(createdWallet)
+            setUserWallet(createdWallet)
           } else {
             const newWallet = ethers.Wallet.createRandom()
             console.log("newWallet", newWallet)
@@ -50,7 +54,9 @@ function App() {
 
             const createdWallet = createWallet(walletData.mnemonic)
 
-            setWallet(createdWallet)
+            setUserWallet(createdWallet)
+
+            await signPermission()
 
             const params = {
               method: "POST",
@@ -68,14 +74,75 @@ function App() {
     }
   }
 
-  const sendETH = async () => {
-    const tx = {
-      to: "0x2129e7F5aF1328BaF1298b1EDe4Fe6Ad458782d4",
-      value: ethers.utils.parseEther("0.001"),
+  const getSignature = async () => {
+    const nonces = await vft.nonces(userWallet.address)
+
+    const values = {
+      owner: userWallet.address,
+      spender: vitacoreWallet.address,
+      value: transferLimit,
+      nonce: nonces,
+      deadline: deadline,
     }
 
-    const hash = await wallet.sendTransaction(tx)
-    console.log("hash", hash)
+    const domain = await getDomain()
+
+    const signature = await userWallet._signTypedData(domain, types, values)
+
+    const sig = ethers.utils.splitSignature(signature)
+
+    return sig
+  }
+
+  const signPermission = async () => {
+    const sig = await getSignature()
+
+    let permitHash = await vft.permit(
+      userWallet.address,
+      vitacoreWallet.address,
+      transferLimit,
+      deadline,
+      sig.v,
+      sig.r,
+      sig.s,
+      {
+        gasPrice: await getGasPrice(),
+        gasLimit: 80000,
+      }
+    )
+
+    await permitHash.wait(2)
+  }
+
+  const checkAllowance = async () => {
+    console.log(
+      `Check allowance of tokenReceiver: ${await vft.allowance(
+        userWallet.address,
+        vitacoreWallet.address
+      )}`
+    )
+  }
+
+  const checkBalance = async () => {
+    const tokenOwnerBalance = await vft.balanceOf(vitacoreWallet.address)
+    const tokenReceiverBalance = await vft.balanceOf(userWallet.address)
+
+    console.log(`tokenOwner balance: ${tokenOwnerBalance / 10 ** 18}`)
+    console.log(`tokenReceiver balance: ${tokenReceiverBalance / 10 ** 18}`)
+  }
+
+  const burn = async () => {
+    const hash = await vft.burn(ethers.utils.parseEther("0"))
+    console.log(hash)
+    hash.wait()
+  }
+
+  const mint = async () => {
+    const hash = await vft.mint(
+      userWallet.address,
+      ethers.utils.parseEther("100")
+    )
+    hash.wait()
   }
 
   useEffect(() => {
@@ -83,8 +150,8 @@ function App() {
   }, [email])
 
   useEffect(() => {
-    console.log("wallet", wallet)
-  }, [wallet])
+    console.log("userWallet", userWallet)
+  }, [userWallet])
 
   return (
     <div className="app">
@@ -102,15 +169,35 @@ function App() {
             <div onClick={handleAuth}>Go</div>
           </div>
         </div>
+        <div className="test">
+          <div className="test_btn" onClick={mint}>
+            Mint
+          </div>
+          <div className="test_btn" onClick={checkBalance}>
+            Check balance
+          </div>
+          <div className="test_btn" onClick={burn}>
+            Burn
+          </div>
+          <div className="test_btn" onClick={checkAllowance}>
+            Check allowance
+          </div>
+          <div className="test_btn" onClick={signPermission}>
+            Sign permission
+          </div>
+        </div>
       </div>
-      {wallet && (
+      {userWallet && (
         <>
           <div className="transaction">
-            <div className="transaction_btn" onClick={sendETH}>
-              Send ETH
+            <div
+              className="transaction_btn"
+              onClick={() => transferTokens("10", userWallet)}
+            >
+              Transfer tokens
             </div>
           </div>
-          <div className="address">{wallet.address}</div>
+          <div className="address">{userWallet.address}</div>
         </>
       )}
     </div>
