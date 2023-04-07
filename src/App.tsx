@@ -11,6 +11,7 @@ import {
   transferTokens,
   signPermission,
 } from "./utils/utils"
+import { addNewWallet, getEmails } from "./utils/API"
 
 function App() {
   const [email, setEmail] = useState("")
@@ -28,44 +29,33 @@ function App() {
 
   const handleAuth = () => {
     if (email) {
-      fetch("http://localhost:4000/emails")
-        .then((res) => res.json())
-        .then(async (emailsArray) => {
-          const existingWallet = emailsArray.find(
-            (emailObj: any) => emailObj[email]
-          )
-          if (existingWallet) {
-            console.log("existingWallet", existingWallet)
+      getEmails().then(async (emailsArray) => {
+        const existingWallet = emailsArray.find(
+          (emailObj: any) => emailObj[email]
+        )
+        if (existingWallet) {
+          console.log("existingWallet", existingWallet)
 
-            const mnemonic = existingWallet[email].mnemonic
-            const createdWallet = createWallet(mnemonic)
+          const mnemonic = existingWallet[email].mnemonic
+          const createdWallet = createWallet(mnemonic)
 
-            setUserWallet(createdWallet)
-          } else {
-            const newWallet = ethers.Wallet.createRandom()
-            console.log("newWallet", newWallet)
-            const walletData = {
-              address: newWallet.address,
-              mnemonic: newWallet?.mnemonic?.phrase || "",
-            }
-
-            const createdWallet = createWallet(walletData.mnemonic)
-
-            setUserWallet(createdWallet)
-
-            const params = {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ [email]: walletData }),
-            }
-            fetch("http://localhost:4000/add", params)
-              .then((res) => res.json())
-              .then((res) => console.log(res))
+          setUserWallet(createdWallet)
+        } else {
+          const newWallet = ethers.Wallet.createRandom()
+          console.log("newWallet", newWallet)
+          const walletData = {
+            address: newWallet.address,
+            mnemonic: newWallet?.mnemonic?.phrase || "",
           }
-          setEmail("")
-        })
+
+          const createdWallet = createWallet(walletData.mnemonic)
+
+          setUserWallet(createdWallet)
+
+          addNewWallet(email, walletData)
+        }
+        setEmail("")
+      })
     }
   }
 

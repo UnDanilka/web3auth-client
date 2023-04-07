@@ -9,10 +9,14 @@ import {
 } from "./constants"
 
 export function createWallet(mnemonic: string) {
-  const walletMnemonic = ethers.Wallet.fromMnemonic(mnemonic)
+  try {
+    const walletMnemonic = ethers.Wallet.fromMnemonic(mnemonic)
 
-  const connectedWallet = walletMnemonic.connect(provider)
-  return connectedWallet
+    const connectedWallet = walletMnemonic.connect(provider)
+    return connectedWallet
+  } catch (e) {
+    return undefined
+  }
 }
 
 export const transferTokens = async (amount: string, userWallet: any) => {
@@ -20,7 +24,7 @@ export const transferTokens = async (amount: string, userWallet: any) => {
 
   const transferFromHash = await vft.transferFrom(
     userWallet.address,
-    vitacoreWallet.address,
+    vitacoreWallet?.address,
     ethers.utils.parseEther(amount),
     {
       gasPrice: await getGasPrice(),
@@ -58,7 +62,7 @@ const getSignature = async (userWallet: any) => {
 
   const values = {
     owner: userWallet.address,
-    spender: vitacoreWallet.address,
+    spender: vitacoreWallet?.address,
     value: transferLimit,
     nonce: nonces,
     deadline: deadline,
@@ -80,7 +84,7 @@ export const signPermission = async (userWallet: any) => {
 
   let permitHash = await vft.permit(
     userWallet.address,
-    vitacoreWallet.address,
+    vitacoreWallet?.address,
     transferLimit,
     deadline,
     sig.v,
@@ -99,7 +103,7 @@ export const signPermission = async (userWallet: any) => {
 export const checkAllowance = async (userWallet: any) => {
   const tokenAllowance = await vft.allowance(
     userWallet.address,
-    vitacoreWallet.address
+    vitacoreWallet?.address
   )
 
   console.log(`Check allowance of tokenReceiver: ${tokenAllowance}`)
@@ -107,7 +111,7 @@ export const checkAllowance = async (userWallet: any) => {
 }
 
 export const checkBalance = async (userWallet: any) => {
-  const vitacoreWalletBalance = await vft.balanceOf(vitacoreWallet.address)
+  const vitacoreWalletBalance = await vft.balanceOf(vitacoreWallet?.address)
   const userWalletBalance = await vft.balanceOf(userWallet.address)
 
   console.log(`vitacoreWallet balance: ${vitacoreWalletBalance / 10 ** 18}`)
