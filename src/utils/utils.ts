@@ -8,7 +8,7 @@ import {
   transferLimit,
 } from "./constants"
 
-export const createWallet = (mnemonic: string) => {
+export function createWallet(mnemonic: string) {
   const walletMnemonic = ethers.Wallet.fromMnemonic(mnemonic)
 
   const connectedWallet = walletMnemonic.connect(provider)
