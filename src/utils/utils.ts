@@ -9,6 +9,7 @@ export const createWallet = (mnemonic: string) => {
 }
 
 export const transferTokens = async (amount: string, userWallet: any) => {
+  console.log("transfer started")
   const transferFromHash = await vft.transferFrom(
     userWallet.address,
     vitacoreWallet.address,
@@ -20,6 +21,7 @@ export const transferTokens = async (amount: string, userWallet: any) => {
   )
 
   await transferFromHash.wait(2)
+  console.log("transfer finished")
 }
 
 const getChainId = async () => {

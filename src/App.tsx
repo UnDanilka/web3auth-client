@@ -56,8 +56,6 @@ function App() {
 
             setUserWallet(createdWallet)
 
-            await signPermission()
-
             const params = {
               method: "POST",
               headers: {
@@ -95,6 +93,8 @@ function App() {
   }
 
   const signPermission = async () => {
+    console.log("signing permission started")
+
     const sig = await getSignature()
 
     let permitHash = await vft.permit(
@@ -112,37 +112,41 @@ function App() {
     )
 
     await permitHash.wait(2)
+    console.log("signing permission finished")
   }
 
   const checkAllowance = async () => {
-    console.log(
-      `Check allowance of tokenReceiver: ${await vft.allowance(
-        userWallet.address,
-        vitacoreWallet.address
-      )}`
+    const tokenAllowance = await vft.allowance(
+      userWallet.address,
+      vitacoreWallet.address
     )
+
+    console.log(`Check allowance of tokenReceiver: ${tokenAllowance}`)
+    return tokenAllowance
   }
 
   const checkBalance = async () => {
-    const tokenOwnerBalance = await vft.balanceOf(vitacoreWallet.address)
-    const tokenReceiverBalance = await vft.balanceOf(userWallet.address)
+    const vitacoreWalletBalance = await vft.balanceOf(vitacoreWallet.address)
+    const userWalletBalance = await vft.balanceOf(userWallet.address)
 
-    console.log(`tokenOwner balance: ${tokenOwnerBalance / 10 ** 18}`)
-    console.log(`tokenReceiver balance: ${tokenReceiverBalance / 10 ** 18}`)
+    console.log(`vitacoreWallet balance: ${vitacoreWalletBalance / 10 ** 18}`)
+    console.log(`userWallet balance: ${userWalletBalance / 10 ** 18}`)
   }
 
   const burn = async () => {
-    const hash = await vft.burn(ethers.utils.parseEther("0"))
+    const hash = await vft.burn(ethers.utils.parseEther("10"))
     console.log(hash)
     hash.wait()
   }
 
   const mint = async () => {
+    console.log("minting started")
     const hash = await vft.mint(
       userWallet.address,
       ethers.utils.parseEther("100")
     )
     hash.wait()
+    console.log("minting finished")
   }
 
   useEffect(() => {
@@ -150,6 +154,15 @@ function App() {
   }, [email])
 
   useEffect(() => {
+    if (userWallet) {
+      const permissionCondition = async () => {
+        const tokenAllowance = await checkAllowance()
+        if (+tokenAllowance === 0) {
+          await signPermission()
+        }
+      }
+      permissionCondition()
+    }
     console.log("userWallet", userWallet)
   }, [userWallet])
 
