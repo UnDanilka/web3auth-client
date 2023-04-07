@@ -37,7 +37,7 @@ export const types = {
 export const deadline = 100000000000
 
 export const vitacoreWallet = createWallet(
-  "pink parent age bulk reunion custom fortune puzzle puppy answer spider baby"
+  "c722fecd936e271c14c2afa311649564659b12d64eaac6db6bfe9a525bbd2b0f"
 )
 
 export const vft = new ethers.Contract(vita20Address, vita20Abi, vitacoreWallet)

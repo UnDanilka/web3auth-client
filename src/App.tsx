@@ -27,41 +27,54 @@ function App() {
     }
   }
 
+  // const handleAuth = () => {
+  //   if (email) {
+  //     getEmails().then(async (emailsArray) => {
+  //       const existingWallet = emailsArray.find(
+  //         (emailObj: any) => emailObj[email]
+  //       )
+  //       if (existingWallet) {
+  //         console.log("existingWallet", existingWallet)
+
+  //         const mnemonic = existingWallet[email].mnemonic
+  //         const createdWallet = createWallet(mnemonic)
+
+  //         setUserWallet(createdWallet)
+  //       } else {
+  //         const newWallet = ethers.Wallet.createRandom()
+  //         console.log("newWallet", newWallet)
+  //         const walletData = {
+  //           address: newWallet.address,
+  //           mnemonic: newWallet?.mnemonic?.phrase || "",
+  //         }
+
+  //         const createdWallet = createWallet(walletData.mnemonic)
+
+  //         setUserWallet(createdWallet)
+
+  //         addNewWallet(email, walletData)
+  //       }
+  //       setEmail("")
+  //     })
+  //   }
+  // }
+
   const handleAuth = () => {
     if (email) {
-      getEmails().then(async (emailsArray) => {
-        const existingWallet = emailsArray.find(
-          (emailObj: any) => emailObj[email]
-        )
-        if (existingWallet) {
-          console.log("existingWallet", existingWallet)
-
-          const mnemonic = existingWallet[email].mnemonic
-          const createdWallet = createWallet(mnemonic)
-
-          setUserWallet(createdWallet)
-        } else {
-          const newWallet = ethers.Wallet.createRandom()
-          console.log("newWallet", newWallet)
-          const walletData = {
-            address: newWallet.address,
-            mnemonic: newWallet?.mnemonic?.phrase || "",
-          }
-
-          const createdWallet = createWallet(walletData.mnemonic)
-
-          setUserWallet(createdWallet)
-
-          addNewWallet(email, walletData)
-        }
-        setEmail("")
-      })
+      console.log("")
     }
   }
 
   useEffect(() => {
     console.log("email", email)
   }, [email])
+
+  // useEffect(() => {
+  //   const test = new ethers.Wallet(
+  //     "c722fecd936e271c14c2afa311649564659b12d64eaac6db6bfe9a525bbd2b0f"
+  //   )
+  //   console.log("test", test)
+  // }, [])
 
   // useEffect(() => {
   //   if (userWallet) {
