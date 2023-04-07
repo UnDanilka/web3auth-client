@@ -10,8 +10,9 @@ import {
   mint,
   transferTokens,
   signPermission,
+  getCryptoHash,
 } from "./utils/utils"
-import { addNewWallet, getEmails } from "./utils/API"
+// import { addNewWallet, getEmails } from "./utils/API"
 
 function App() {
   const [email, setEmail] = useState("")
@@ -27,67 +28,20 @@ function App() {
     }
   }
 
-  // const handleAuth = () => {
-  //   if (email) {
-  //     getEmails().then(async (emailsArray) => {
-  //       const existingWallet = emailsArray.find(
-  //         (emailObj: any) => emailObj[email]
-  //       )
-  //       if (existingWallet) {
-  //         console.log("existingWallet", existingWallet)
-
-  //         const mnemonic = existingWallet[email].mnemonic
-  //         const createdWallet = createWallet(mnemonic)
-
-  //         setUserWallet(createdWallet)
-  //       } else {
-  //         const newWallet = ethers.Wallet.createRandom()
-  //         console.log("newWallet", newWallet)
-  //         const walletData = {
-  //           address: newWallet.address,
-  //           mnemonic: newWallet?.mnemonic?.phrase || "",
-  //         }
-
-  //         const createdWallet = createWallet(walletData.mnemonic)
-
-  //         setUserWallet(createdWallet)
-
-  //         addNewWallet(email, walletData)
-  //       }
-  //       setEmail("")
-  //     })
-  //   }
-  // }
-
-  const handleAuth = () => {
+  const handleAuth = async () => {
     if (email) {
-      console.log("")
+      const userPrivateKey = await getCryptoHash(email)
+      console.log(`User private key: ${userPrivateKey}`)
+      const newUserWallet = new ethers.Wallet(userPrivateKey)
+      console.log("newUserWallet", newUserWallet)
+      setUserWallet(newUserWallet)
+      setEmail("")
     }
   }
 
   useEffect(() => {
     console.log("email", email)
   }, [email])
-
-  // useEffect(() => {
-  //   const test = new ethers.Wallet(
-  //     "c722fecd936e271c14c2afa311649564659b12d64eaac6db6bfe9a525bbd2b0f"
-  //   )
-  //   console.log("test", test)
-  // }, [])
-
-  // useEffect(() => {
-  //   if (userWallet) {
-  //     const permissionCondition = async () => {
-  //       const tokenAllowance = await checkAllowance()
-  //       if (+tokenAllowance === 0) {
-  //         await signPermission()
-  //       }
-  //     }
-  //     permissionCondition()
-  //   }
-  //   console.log("userWallet", userWallet)
-  // }, [userWallet])
 
   return (
     <div className="app">
@@ -118,7 +72,10 @@ function App() {
           <div className="test_btn" onClick={() => checkAllowance(userWallet)}>
             Check allowance
           </div>
-          <div className="test_btn" onClick={() => signPermission(userWallet)}>
+          <div
+            className="test_btn"
+            onClick={() => signPermission(userWallet, "10")}
+          >
             Sign permission
           </div>
         </div>

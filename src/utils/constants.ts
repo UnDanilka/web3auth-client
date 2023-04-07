@@ -41,5 +41,3 @@ export const vitacoreWallet = createWallet(
 )
 
 export const vft = new ethers.Contract(vita20Address, vita20Abi, vitacoreWallet)
-
-export const transferLimit = ethers.utils.parseEther("100000000000")
