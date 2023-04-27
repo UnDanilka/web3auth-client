@@ -1,5 +1,6 @@
 import { ethers } from "ethers"
 import { useEffect, useState } from "react"
+import Test from "./utils/Test.json"
 import "./App.scss"
 
 import {
@@ -12,6 +13,7 @@ import {
   signPermission,
   getCryptoHash,
 } from "./utils/utils"
+import { vitacoreWallet } from "./utils/constants"
 // import { addNewWallet, getEmails } from "./utils/API"
 
 function App() {
@@ -43,6 +45,17 @@ function App() {
     console.log("email", email)
   }, [email])
 
+  const deploy = async () => {
+    const factory = new ethers.ContractFactory(
+      Test.abi,
+      Test.bytecode,
+      vitacoreWallet
+    )
+
+    const contract = await factory.deploy()
+    console.log("userSmartContractWallet", contract.address)
+  }
+
   return (
     <div className="app">
       <div className="input">
@@ -60,6 +73,9 @@ function App() {
           </div>
         </div>
         <div className="test">
+          <div className="test_btn" onClick={deploy}>
+            Deploy
+          </div>
           <div className="test_btn" onClick={() => mint(userWallet)}>
             Mint
           </div>
