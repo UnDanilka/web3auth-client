@@ -1,24 +1,22 @@
 import { ethers } from "ethers"
 import { useEffect, useState } from "react"
-import Test from "./utils/Test.json"
+import UserWallet from "./utils/UserWallet.json"
 import "./App.scss"
 
 import {
-  burn,
-  checkAllowance,
   checkBalance,
-  createWallet,
   mint,
   transferTokens,
-  signPermission,
+  transferEthers,
   getCryptoHash,
 } from "./utils/utils"
 import { vitacoreWallet } from "./utils/constants"
-// import { addNewWallet, getEmails } from "./utils/API"
+import { addNewWallet, getWallets } from "./utils/API"
 
 function App() {
   const [email, setEmail] = useState("")
-  const [userWallet, setUserWallet] = useState<any>()
+  const [walletEOA, setWalletEOA] = useState<any>()
+  const [walletSmart, setWalletSmart] = useState<any>(null)
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value)
@@ -36,8 +34,13 @@ function App() {
       console.log(`User private key: ${userPrivateKey}`)
       const newUserWallet = new ethers.Wallet(userPrivateKey)
       console.log("newUserWallet", newUserWallet)
-      setUserWallet(newUserWallet)
+      setWalletEOA(newUserWallet)
       setEmail("")
+      const data = await getWallets()
+      const walletSmartMatch = data[newUserWallet.address]
+      if (walletSmartMatch) {
+        setWalletSmart(walletSmartMatch)
+      }
     }
   }
 
@@ -45,15 +48,21 @@ function App() {
     console.log("email", email)
   }, [email])
 
+  useEffect(() => {
+    console.log("walletSmart", walletSmart)
+  }, [walletSmart])
+
   const deploy = async () => {
     const factory = new ethers.ContractFactory(
-      Test.abi,
-      Test.bytecode,
+      UserWallet.abi,
+      UserWallet.bytecode,
       vitacoreWallet
     )
 
     const contract = await factory.deploy()
-    console.log("userSmartContractWallet", contract.address)
+    console.log("walletSmart", contract.address)
+    setWalletSmart(contract)
+    addNewWallet(walletEOA.address, contract.address)
   }
 
   return (
@@ -76,37 +85,31 @@ function App() {
           <div className="test_btn" onClick={deploy}>
             Deploy
           </div>
-          <div className="test_btn" onClick={() => mint(userWallet)}>
+          <div className="test_btn" onClick={() => mint(walletEOA)}>
             Mint
           </div>
-          <div className="test_btn" onClick={() => checkBalance(userWallet)}>
+          <div className="test_btn" onClick={() => checkBalance(walletEOA)}>
             Check balance
-          </div>
-          <div className="test_btn" onClick={burn}>
-            Burn
-          </div>
-          <div className="test_btn" onClick={() => checkAllowance(userWallet)}>
-            Check allowance
-          </div>
-          <div
-            className="test_btn"
-            onClick={() => signPermission(userWallet, "10")}
-          >
-            Sign permission
           </div>
         </div>
       </div>
-      {userWallet && (
+      {walletEOA && (
         <>
           <div className="transaction">
             <div
               className="transaction_btn"
-              onClick={() => transferTokens("10", userWallet)}
+              onClick={() => transferTokens("10", walletEOA)}
             >
               Transfer tokens
             </div>
+            <div
+              className="transaction_btn"
+              onClick={() => transferEthers("10", walletEOA)}
+            >
+              Transfer ethers
+            </div>
           </div>
-          <div className="address">{userWallet.address}</div>
+          <div className="address">{walletEOA.address}</div>
         </>
       )}
     </div>
