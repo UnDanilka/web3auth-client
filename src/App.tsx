@@ -59,7 +59,7 @@ function App() {
       vitacoreWallet
     )
 
-    const contract = await factory.deploy()
+    const contract = await factory.deploy(walletEOA.address)
     console.log("walletSmart", contract.address)
     setWalletSmart(contract)
     addNewWallet(walletEOA.address, contract.address)
