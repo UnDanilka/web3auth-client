@@ -30,6 +30,7 @@ function App() {
 
   const handleAuth = async () => {
     if (email) {
+      setWalletSmart(null)
       const userPrivateKey = await getCryptoHash(email)
       console.log(`User private key: ${userPrivateKey}`)
       const newUserWallet = new ethers.Wallet(userPrivateKey)
@@ -37,9 +38,18 @@ function App() {
       setWalletEOA(newUserWallet)
       setEmail("")
       const data = await getWallets()
-      const walletSmartMatch = data[newUserWallet.address]
+      console.log("data", data)
+      const walletSmartMatch = data.find(
+        (obj: any) => obj[newUserWallet.address]
+      )
       if (walletSmartMatch) {
-        setWalletSmart(walletSmartMatch)
+        const userContractAddress = walletSmartMatch[newUserWallet.address]
+        const userContract = new ethers.Contract(
+          userContractAddress,
+          UserWallet.abi,
+          vitacoreWallet
+        )
+        setWalletSmart(userContract)
       }
     }
   }
@@ -53,6 +63,7 @@ function App() {
   }, [walletSmart])
 
   const deploy = async () => {
+    console.log("deploy sterted")
     const factory = new ethers.ContractFactory(
       UserWallet.abi,
       UserWallet.bytecode,
@@ -62,7 +73,23 @@ function App() {
     const contract = await factory.deploy(walletEOA.address)
     console.log("walletSmart", contract.address)
     setWalletSmart(contract)
-    addNewWallet(walletEOA.address, contract.address)
+    await addNewWallet(walletEOA.address, contract.address)
+    console.log("deploy finished")
+  }
+
+  const sendETH = async () => {
+    if (walletSmart) {
+      let amountInEther = "0.01"
+      let tx = {
+        to: walletSmart,
+        value: ethers.utils.parseEther(amountInEther),
+      }
+      vitacoreWallet.sendTransaction(tx).then((txObj) => {
+        console.log("txHash", txObj.hash)
+      })
+    } else {
+      await deploy()
+    }
   }
 
   return (
@@ -88,6 +115,9 @@ function App() {
           <div className="test_btn" onClick={() => mint(walletEOA)}>
             Mint
           </div>
+          <div className="test_btn" onClick={() => sendETH()}>
+            SendETH
+          </div>
           <div className="test_btn" onClick={() => checkBalance(walletEOA)}>
             Check balance
           </div>
@@ -104,12 +134,16 @@ function App() {
             </div>
             <div
               className="transaction_btn"
+              style={{ marginLeft: "200px" }}
               onClick={() => transferEthers("10", walletEOA)}
             >
               Transfer ethers
             </div>
           </div>
-          <div className="address">{walletEOA.address}</div>
+          <div className="address">EOA {walletEOA.address}</div>
+          <div className="address-right">
+            Smart {walletSmart?.address || ""}
+          </div>
         </>
       )}
     </div>
