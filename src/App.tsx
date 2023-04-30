@@ -3,7 +3,12 @@ import { useEffect, useState } from "react"
 import UserWallet from "./utils/UserWallet.json"
 import "./App.scss"
 
-import { withdrawTokens, withdrawEthers, getCryptoHash } from "./utils/utils"
+import {
+  withdrawTokens,
+  withdrawEthers,
+  getCryptoHash,
+  parseBigNum,
+} from "./utils/utils"
 import { vitacoreWallet, vft } from "./utils/constants"
 import { addNewWallet, getWallets } from "./utils/API"
 
@@ -128,7 +133,7 @@ function App() {
           <div className="test_btn" onClick={() => mintStart("100")}>
             Mint
           </div>
-          <div className="test_btn" onClick={() => transferEtherStart("0.01")}>
+          <div className="test_btn" onClick={() => transferEtherStart("0.1")}>
             SendETH
           </div>
         </div>
@@ -139,11 +144,7 @@ function App() {
             <div
               className="transaction_btn"
               onClick={() =>
-                withdrawTokens(
-                  (10 * 10 ** 18).toString(),
-                  walletSmart,
-                  walletEOA
-                )
+                withdrawTokens(parseBigNum(10), walletSmart, walletEOA)
               }
             >
               Withdraw tokens
@@ -151,7 +152,9 @@ function App() {
             <div
               className="transaction_btn"
               style={{ marginLeft: "200px" }}
-              onClick={() => withdrawEthers("10", walletEOA)}
+              onClick={() =>
+                withdrawEthers(parseBigNum(0.1), walletSmart, walletEOA)
+              }
             >
               Withdraw ethers
             </div>

@@ -25,13 +25,14 @@ export const getSignature = async (
   return signature
 }
 
+export const nonce = 18
+
 export const withdrawTokens = async (
   amount: string,
   walletSmart: any,
   walletEOA: any
 ) => {
   console.log("transfer started")
-  const nonce = 14
   const signature = await getSignature(amount, nonce, walletSmart, walletEOA)
   const txHash = await walletSmart.withdrawToken(
     vita20Address,
@@ -43,9 +44,21 @@ export const withdrawTokens = async (
   console.log("transfer finished")
 }
 
-export const withdrawEthers = async (amount: string, walletSmart: any) => {}
+export const withdrawEthers = async (
+  amount: string,
+  walletSmart: any,
+  walletEOA: any
+) => {
+  console.log("transfer started")
+  const signature = await getSignature(amount, nonce, walletSmart, walletEOA)
+  const txHash = await walletSmart.withdrawEth(amount, nonce, signature)
+  await txHash.wait()
+  console.log("transfer finished")
+}
 
 export const getCryptoHash = async (email: string) => {
   const cryptoHash = await sha256(email)
   return cryptoHash
 }
+
+export const parseBigNum = (num: number) => (num * 10 ** 18).toString()
