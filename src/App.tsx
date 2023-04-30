@@ -5,12 +5,11 @@ import "./App.scss"
 
 import {
   checkBalance,
-  mint,
   transferTokens,
   transferEthers,
   getCryptoHash,
 } from "./utils/utils"
-import { vitacoreWallet } from "./utils/constants"
+import { vitacoreWallet, vft } from "./utils/constants"
 import { addNewWallet, getWallets } from "./utils/API"
 
 function App() {
@@ -63,7 +62,7 @@ function App() {
   }, [walletSmart])
 
   const deploy = async () => {
-    console.log("deploy sterted")
+    console.log("deploy started")
     const factory = new ethers.ContractFactory(
       UserWallet.abi,
       UserWallet.bytecode,
@@ -75,20 +74,42 @@ function App() {
     setWalletSmart(contract)
     await addNewWallet(walletEOA.address, contract.address)
     console.log("deploy finished")
+    return contract.address
   }
 
-  const sendETH = async () => {
+  const mint = async (amount: string, smartAddress: string) => {
+    console.log("minting started")
+    const hash = await vft.mint(smartAddress, ethers.utils.parseEther(amount))
+    hash.wait()
+    console.log("minting finished")
+  }
+
+  const mintStart = async (amount: string) => {
     if (walletSmart) {
-      let amountInEther = "0.01"
-      let tx = {
-        to: walletSmart,
-        value: ethers.utils.parseEther(amountInEther),
-      }
-      vitacoreWallet.sendTransaction(tx).then((txObj) => {
-        console.log("txHash", txObj.hash)
-      })
+      mint(amount, walletSmart.address)
     } else {
-      await deploy()
+      const smartAddress = await deploy()
+      mint(amount, smartAddress)
+    }
+  }
+
+  const transferEther = (amount: string, smartAddress: string) => {
+    let tx = {
+      to: smartAddress,
+      value: ethers.utils.parseEther(amount),
+      gasLimit: 100000,
+    }
+    vitacoreWallet.sendTransaction(tx).then((txObj) => {
+      console.log("txHash", txObj.hash)
+    })
+  }
+
+  const transferEtherStart = async (amount: string) => {
+    if (walletSmart) {
+      transferEther(amount, walletSmart.address)
+    } else {
+      const smartAddress = await deploy()
+      transferEther(amount, smartAddress)
     }
   }
 
@@ -109,13 +130,10 @@ function App() {
           </div>
         </div>
         <div className="test">
-          <div className="test_btn" onClick={deploy}>
-            Deploy
-          </div>
-          <div className="test_btn" onClick={() => mint(walletEOA)}>
+          <div className="test_btn" onClick={() => mintStart("30")}>
             Mint
           </div>
-          <div className="test_btn" onClick={() => sendETH()}>
+          <div className="test_btn" onClick={() => transferEtherStart("0.01")}>
             SendETH
           </div>
           <div className="test_btn" onClick={() => checkBalance(walletEOA)}>
@@ -130,14 +148,14 @@ function App() {
               className="transaction_btn"
               onClick={() => transferTokens("10", walletEOA)}
             >
-              Transfer tokens
+              Withdraw tokens
             </div>
             <div
               className="transaction_btn"
               style={{ marginLeft: "200px" }}
               onClick={() => transferEthers("10", walletEOA)}
             >
-              Transfer ethers
+              Withdraw ethers
             </div>
           </div>
           <div className="address">EOA {walletEOA.address}</div>

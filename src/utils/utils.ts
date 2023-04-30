@@ -26,16 +26,6 @@ export const checkBalance = async (userWallet: any) => {
   console.log(`userWallet balance: ${userWalletBalance / 10 ** 18}`)
 }
 
-export const mint = async (userWallet: any) => {
-  console.log("minting started")
-  const hash = await vft.mint(
-    userWallet.address,
-    ethers.utils.parseEther("100")
-  )
-  hash.wait()
-  console.log("minting finished")
-}
-
 export const getCryptoHash = async (email: string) => {
   const cryptoHash = await sha256(email)
   return cryptoHash
