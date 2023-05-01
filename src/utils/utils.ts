@@ -25,7 +25,7 @@ export const getSignature = async (
   return signature
 }
 
-export const nonce = 18
+export const nonce = 22
 
 export const withdrawTokens = async (
   amount: string,

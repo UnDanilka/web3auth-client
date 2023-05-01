@@ -1,6 +1,7 @@
 import { ethers } from "ethers"
 import { useEffect, useState } from "react"
-import UserWallet from "./utils/UserWallet.json"
+import UserWallet from "./utils/Contracts/UserWallet.json"
+import { mint, transferEther } from "./utils/ABI"
 import "./App.scss"
 
 import {
@@ -9,7 +10,7 @@ import {
   getCryptoHash,
   parseBigNum,
 } from "./utils/utils"
-import { vitacoreWallet, vft } from "./utils/constants"
+import { vitacoreWallet } from "./utils/constants"
 import { addNewWallet, getWallets } from "./utils/API"
 
 function App() {
@@ -53,14 +54,6 @@ function App() {
     }
   }
 
-  useEffect(() => {
-    console.log("email", email)
-  }, [email])
-
-  useEffect(() => {
-    console.log("walletSmart", walletSmart)
-  }, [walletSmart])
-
   const deploy = async () => {
     console.log("deploy started")
     const factory = new ethers.ContractFactory(
@@ -77,41 +70,22 @@ function App() {
     return contract.address
   }
 
-  const mint = async (amount: string, smartAddress: string) => {
-    console.log("minting started")
-    const hash = await vft.mint(smartAddress, ethers.utils.parseEther(amount))
-    hash.wait()
-    console.log("minting finished")
-  }
-
-  const mintStart = async (amount: string) => {
+  const transferAssets = async (amount: string, transfer: any) => {
     if (walletSmart) {
-      mint(amount, walletSmart.address)
+      transfer(amount, walletSmart.address)
     } else {
       const smartAddress = await deploy()
-      mint(amount, smartAddress)
+      transfer(amount, smartAddress)
     }
   }
 
-  const transferEther = (amount: string, smartAddress: string) => {
-    let tx = {
-      to: smartAddress,
-      value: ethers.utils.parseEther(amount),
-      gasLimit: 100000,
-    }
-    vitacoreWallet.sendTransaction(tx).then((txObj) => {
-      console.log("txHash", txObj.hash)
-    })
-  }
+  useEffect(() => {
+    console.log("email", email)
+  }, [email])
 
-  const transferEtherStart = async (amount: string) => {
-    if (walletSmart) {
-      transferEther(amount, walletSmart.address)
-    } else {
-      const smartAddress = await deploy()
-      transferEther(amount, smartAddress)
-    }
-  }
+  useEffect(() => {
+    console.log("walletSmart", walletSmart)
+  }, [walletSmart])
 
   return (
     <div className="app">
@@ -130,10 +104,13 @@ function App() {
           </div>
         </div>
         <div className="test">
-          <div className="test_btn" onClick={() => mintStart("100")}>
+          <div className="test_btn" onClick={() => transferAssets("100", mint)}>
             Mint
           </div>
-          <div className="test_btn" onClick={() => transferEtherStart("0.1")}>
+          <div
+            className="test_btn"
+            onClick={() => transferAssets("0.1", transferEther)}
+          >
             SendETH
           </div>
         </div>

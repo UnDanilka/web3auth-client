@@ -1,5 +1,5 @@
 import { ethers } from "ethers"
-import vita20 from "./Vita20.json"
+import vita20 from "./Contracts/Vita20.json"
 import { createWallet } from "./utils"
 
 export const vita20Address = "0x80688997E89d582a7644616dA38e4B9506117436"
