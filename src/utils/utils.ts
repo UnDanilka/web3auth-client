@@ -62,3 +62,51 @@ export const getCryptoHash = async (email: string) => {
 }
 
 export const parseBigNum = (num: number) => (num * 10 ** 18).toString()
+
+export const getLogs = async (walletEOA: any) => {
+  const eventSignature: string = "Register(address,string)"
+  const eventTopic: string = ethers.utils.id(eventSignature)
+  const userWalletVersion: string = "version3"
+  const userWalletVersionHEX: string = ethers.utils.id(userWalletVersion)
+  const EOAAddressArray = walletEOA.address.split("")
+  EOAAddressArray.splice(0, 2)
+  const parsedEOAAddress = [
+    "0",
+    "x",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    "0",
+    ...EOAAddressArray,
+  ].join("")
+
+  const filter: any = {
+    fromBlock: 0,
+    topics: [eventTopic, parsedEOAAddress, userWalletVersionHEX],
+  }
+  const logs = await provider.getLogs(filter)
+  console.log("logs", logs)
+  console.log("smartWalletAddress", logs[0].address)
+
+  return logs[0].address
+}

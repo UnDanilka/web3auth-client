@@ -3,15 +3,16 @@ import { useEffect, useState } from "react"
 import UserWallet from "./utils/Contracts/UserWallet.json"
 import { mint, transferEther } from "./utils/ABI"
 import "./App.scss"
+import { provider } from "./utils/constants"
 
 import {
   withdrawTokens,
   withdrawEthers,
   getCryptoHash,
   parseBigNum,
+  getLogs,
 } from "./utils/utils"
 import { vitacoreWallet } from "./utils/constants"
-import { addNewWallet, getWallets } from "./utils/API"
 
 function App() {
   const [email, setEmail] = useState("")
@@ -37,13 +38,8 @@ function App() {
       console.log("newUserWallet", newUserWallet)
       setWalletEOA(newUserWallet)
       setEmail("")
-      const data = await getWallets()
-      console.log("data", data)
-      const walletSmartMatch = data.find(
-        (obj: any) => obj[newUserWallet.address]
-      )
-      if (walletSmartMatch) {
-        const userContractAddress = walletSmartMatch[newUserWallet.address]
+      const userContractAddress = await getLogs(newUserWallet)
+      if (userContractAddress) {
         const userContract = new ethers.Contract(
           userContractAddress,
           UserWallet.abi,
@@ -63,9 +59,13 @@ function App() {
     )
 
     const contract = await factory.deploy(walletEOA.address)
+    contract.on("Register", (eoa, contractVersion, commonInfo) => {
+      console.log("eoa", eoa)
+      console.log("contractVersion", contractVersion)
+      console.log("commonInfo", commonInfo)
+    })
     console.log("walletSmart", contract.address)
     setWalletSmart(contract)
-    await addNewWallet(walletEOA.address, contract.address)
     console.log("deploy finished")
     return contract.address
   }
