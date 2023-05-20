@@ -1,5 +1,6 @@
 import { ethers } from "ethers"
 import { sha256 } from "crypto-hash"
+import { v4 as uuidv4 } from "uuid"
 
 import { provider, vita20Address, vitacoreWallet } from "./constants"
 
@@ -11,12 +12,12 @@ export function createWallet(privateKey: string) {
 
 export const getSignature = async (
   amount: string,
-  nonce: number,
+  nonce: string,
   walletSmart: any,
   walletEOA: any
 ) => {
   const hash = ethers.utils.solidityKeccak256(
-    ["address", "uint256", "uint256", "address"],
+    ["address", "uint256", "string", "address"],
     [vitacoreWallet.address, amount, nonce, walletSmart.address]
   )
 
@@ -25,14 +26,13 @@ export const getSignature = async (
   return signature
 }
 
-export const nonce = 26
-
 export const withdrawTokens = async (
   amount: string,
   walletSmart: any,
   walletEOA: any
 ) => {
   console.log("transfer started")
+  const nonce = uuidv4()
   const signature = await getSignature(amount, nonce, walletSmart, walletEOA)
   const txHash = await walletSmart.withdrawToken(
     vita20Address,
@@ -50,6 +50,8 @@ export const withdrawEthers = async (
   walletEOA: any
 ) => {
   console.log("transfer started")
+  const nonce = uuidv4()
+
   const signature = await getSignature(amount, nonce, walletSmart, walletEOA)
   const txHash = await walletSmart.withdrawEth(amount, nonce, signature)
   await txHash.wait()
@@ -66,7 +68,7 @@ export const parseBigNum = (num: number) => (num * 10 ** 18).toString()
 export const getLogs = async (walletEOA: any) => {
   const eventSignature: string = "Register(address,string)"
   const eventTopic: string = ethers.utils.id(eventSignature)
-  const userWalletVersion: string = "version3"
+  const userWalletVersion: string = "version4"
   const userWalletVersionHEX: string = ethers.utils.id(userWalletVersion)
   const EOAAddressArray = walletEOA.address.split("")
   EOAAddressArray.splice(0, 2)
@@ -106,7 +108,7 @@ export const getLogs = async (walletEOA: any) => {
   }
   const logs = await provider.getLogs(filter)
   console.log("logs", logs)
-  console.log("smartWalletAddress", logs[0].address)
+  console.log("smartWalletAddress", logs[0]?.address)
 
-  return logs[0].address
+  return logs[0]?.address
 }
